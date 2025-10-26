@@ -1,0 +1,49 @@
+/* Create database if it doesn't exist */
+IF DB_ID('ExpandifySA') IS NULL
+BEGIN
+    CREATE DATABASE ExpandifySA;
+END
+GO
+
+USE ExpandifySA;
+GO
+
+/* ===========================
+   1) UserInformation (common)
+   =========================== */
+IF OBJECT_ID('dbo.UserInformation','U') IS NOT NULL
+    DROP TABLE dbo.UserInformation;
+GO
+
+CREATE TABLE dbo.UserInformation
+(
+    User_ID             INT IDENTITY(2000,1) NOT NULL PRIMARY KEY,  -- starts at 2000
+    TypeOfUser          VARCHAR(MAX)         NULL,                   -- 'provider' | 'client'
+    FirstName           VARCHAR(MAX)         NULL,
+    LastName            VARCHAR(MAX)         NULL,
+    ID_Num              VARCHAR(MAX)         NULL,
+    ID_Doc              VARBINARY(MAX)       NULL,                   -- file bytes (PDF etc.)
+    Mobile_Number       VARCHAR(MAX)         NULL,
+    Email_Address       VARCHAR(MAX)         NULL,
+    Province            VARCHAR(MAX)         NULL,
+    City                VARCHAR(MAX)         NULL,
+    [Suburb]            VARCHAR(MAX)         NULL,                   -- (spelled 'Suburb')
+    [Street Address]    VARCHAR(MAX)         NULL,
+    [Password(Hashed)]  VARCHAR(MAX)         NULL                    -- hashed password string
+);
+GO
+
+/* ===========================
+   2) ServiceProvider
+   =========================== */
+IF OBJECT_ID('dbo.ServiceProvider','U') IS NOT NULL
+    DROP TABLE dbo.ServiceProvider;
+GO
+
+CREATE TABLE dbo.ServiceProvider
+(
+    Service_ID      INT IDENTITY(2010,1) NOT NULL PRIMARY KEY,      -- starts at 2010
+    User_ID         INT                   NOT NULL,                  -- FK → UserInformation
+    Skills          VARCHAR(MAX)          NULL,                      -- comma-separated or JSON
+    HasTransport    BIT                   NOT NULL DEFAULT 0,
+    HasEquipment    BIT                   NOT NULL DEFAU
