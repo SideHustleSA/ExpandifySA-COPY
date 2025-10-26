@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Driver Console – ExpandifySA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f1222; --panel:#151834; --panel-2:#1b1f3f; --accent:#6f7cff; --accent-2:#9a78ff;
+    --text:#e7e9ff; --muted:#9aa0c3; --good:#13d67a; --warn:#ffcc00; --danger:#ff6b6b;
+    --border:#2a2f5a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",sans-serif;
+    background:linear-gradient(135deg,#0b1022,#191e42 45%,#1b1642); color:var(--text);
+    height:100vh; overflow:hidden;
+  }
+  .app{display:grid; grid-template-columns:260px 1fr; grid-template-rows:64px 1fr; grid-template-areas:
+    "sidebar header"
+    "sidebar main";
+    height:100vh;
+  }
+  /* Sidebar */
+  .sidebar{
+    grid-area:sidebar; background:linear-gradient(180deg,#171a39,#121531);
+    border-right:1px solid var(--border); padding:14px 12px; display:flex; flex-direction:column; gap:10px;
+  }
+  .brand{
+    display:flex; align-items:center; gap:10px; padding:10px 8px; margin-bottom:6px;
+  }
+  .logo{
+    width:36px; height:36px; border-radius:10px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2)); display:grid; place-items:center; font-weight:800; color:#0b0e1b;
+  }
+  .brand .name{font-weight:700; letter-spacing:.3px}
+  .nav{display:flex; flex-direction:column; gap:6px; margin-top:8px}
+  .nav a{
+    display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:10px; color:var(--text);
+    text-decoration:none; border:1px solid transparent; transition:.2s;
+  }
+  .nav a .ix{width:22px; text-align:center; opacity:.9}
+  .nav a:hover{background:var(--panel-2); border-color:var(--border)}
+  .nav a.active{background:linear-gradient(135deg,rgba(111,124,255,.18),rgba(154,120,255,.12)); border-color:var(--accent)}
+  .spacer{flex:1}
+  .support{margin-top:auto; border-top:1px dashed var(--border); padding-top:10px}
+  .tiny{font-size:.8rem; color:var(--muted)}
+
+  /* Header */
+  .header{
+    grid-area:header; display:flex; align-items:center; justify-content:space-between; padding:10px 16px;
+    border-bottom:1px solid var(--border); background:rgba(15,18,34,.55); backdrop-filter: blur(6px);
+  }
+  .status{
+    display:flex; align-items:center; gap:12px;
+    background:var(--panel); border:1px solid var(--border); padding:8px 12px; border-radius:10px;
+  }
+  .pill{
+    position:relative; width:64px; height:30px; background:#0f1330; border:1px solid var(--border); border-radius:999px; cursor:pointer;
+  }
+  .dot{position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%;
+       background:linear-gradient(135deg,#2b2f58,#4a4fa0); transition:.22s;}
+  .pill.online{background:linear-gradient(135deg,rgba(19,214,122,.15),rgba(111,124,255,.15));}
+  .pill.online .dot{left:37px; background:linear-gradient(135deg,#19d67a,#76f2b2)}
+  .hdr-right{display:flex; align-items:center; gap:12px}
+  .chip{
+    padding:8px 12px; border-radius:10px; background:var(--panel); border:1px solid var(--border); color:var(--muted); font-weight:600;
+  }
+  .primary{
+    background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#0b0f1d; border:none; font-weight:800;
+    padding:10px 14px; border-radius:10px; cursor:pointer;
+  }
+
+  /* Main */
+  .main{grid-area:main; display:grid; grid-template-columns:1fr 360px; gap:12px; padding:12px}
+  .map{
+    position:relative; background:
+      radial-gradient(1200px 600px at 60% -10%, rgba(111,124,255,.16), transparent 60%),
+      linear-gradient(180deg,#0e1230,#0a0d24);
+    border:1px solid var(--border); border-radius:14px; overflow:hidden;
+  }
+  .grid-tilt{
+    position:absolute; inset:0;
+    background-image:linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size:40px 40px;
+    mask-image: radial-gradient(ellipse at 60% 30%, rgba(0,0,0,1), rgba(0,0,0,.2) 60%, rgba(0,0,0,0) 85%);
+  }
+  .heat{
+    position:absolute; width:420px; height:420px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,107,107,.45), rgba(255,107,107,.18) 55%, rgba(255,107,107,0) 70%);
+    filter:blur(6px); left:58%; top:32%;
+  }
+  .controls{
+    position:absolute; right:12px; top:12px; display:flex; flex-direction:column; gap:8px;
+  }
+  .ctrl{
+    width:40px; height:40px; border-radius:10px; display:grid; place-items:center; background:var(--panel);
+    border:1px solid var(--border); cursor:pointer;
+  }
+  .go{
+    position:absolute; left:50%; bottom:18px; transform:translateX(-50%);
+    padding:14px 22px; border-radius:999px; background:linear-gradient(135deg,var(--good),#6fffc7); color:#0a1323; font-weight:900;
+    border:none; cursor:pointer; box-shadow:0 10px 30px rgba(19,214,122,.25);
+  }
+  .go.off{background:linear-gradient(135deg,#3a406f,#5a62b5); color:#e6e9ff; box-shadow:none}
+
+  /* Right column */
+  .panel{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:12px;
+  }
+  .panel h3{margin:0; font-size:1rem}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:8px}
+  .earn-num{font-size:1.8rem; font-weight:800}
+  .progress{height:10px; background:#0e1230; border-radius:999px; overflow:hidden; border:1px solid var(--border)}
+  .bar{height:100%; width:38%; background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+  .list{display:flex; flex-direction:column; gap:8px}
+  .item{
+    display:flex; justify-content:space-between; gap:8px; padding:10px; border:1px dashed var(--border); border-radius:10px; background:rgba(20,25,55,.45)
+  }
+  .muted{color:var(--muted)}
+
+  /* Trip request card */
+  .request{
+    position:absolute; left:18px; bottom:18px; width:360px; background:var(--panel);
+    border:1px solid var(--border); border-radius:16px; padding:14px; display:none; box-shadow:0 20px 50px rgba(0,0,0,.35);
+  }
+  .request.show{display:block}
+  .badge{
+    display:inline-flex; gap:6px; align-items:center; padding:6px 10px; border-radius:999px;
+    background:rgba(255,255,255,.06); border:1px solid var(--border); font-size:.85rem;
+  }
+  .req-row{display:flex; align-items:center; justify-content:space-between; margin:8px 0}
+  .req-title{font-weight:700; font-size:1.05rem}
+  .req-meta{display:flex; gap:10px; color:var(--muted); font-size:.9rem}
+  .req-actions{display:flex; gap:10px; margin-top:10px}
+  .btn{
+    flex:1; padding:10px 12px; border-radius:10px; font-weight:700; cursor:pointer; border:1px solid var(--border); background:var(--panel-2); color:var(--text);
+  }
+  .btn.primary{background:linear-gradient(135deg,var(--good),#6fffc7); color:#071021; border:none}
+  .btn.danger{background:linear-gradient(135deg,#2b2f58,#4b4fa0);}
+
+  /* Trips drawer */
+  .drawer{
+    position:fixed; right:12px; top:76px; width:420px; max-height:calc(100vh - 92px); overflow:auto;
+    background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:12px; display:none;
+  }
+  .drawer.show{display:block}
+  .trip{
+    border:1px solid var(--border); border-radius:12px; padding:10px; margin-bottom:10px; background:rgba(18,22,50,.55)
+  }
+
+  /* Helper */
+  .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:.85rem; color:var(--muted)}
+</style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">Ex</div>
+        <div>
+          <div class="name">ExpandifySA Driver</div>
+          <div class="tiny">PC Console</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="#" class="active"><span class="ix">🗺️</span> Map</a>
+        <a href="#" id="btnEarnings"><span class="ix">💸</span> Earnings</a>
+        <a href="#" id="btnTrips"><span class="ix">🧾</span> Trips</a>
+        <a href="#"><span class="ix">🏆</span> Incentives</a>
+        <a href="#"><span class="ix">⭐</span> Ratings</a>
+        <a href="#"><span class="ix">🛡️</span> Account & Docs</a>
+        <a href="#"><span class="ix">❓</span> Help</a>
+      </nav>
+      <div class="spacer"></div>
+      <div class="support tiny">
+        Shortcuts: <span class="kbd">O</span> online, <span class="kbd">R</span> request,<br/>
+        <span class="kbd">A/D</span> accept/decline, <span class="kbd">E</span> earnings, <span class="kbd">T</span> trips
+      </div>
+    </aside>
+
+    <!-- Header -->
+    <header class="header">
+      <div class="status">
+        <div>Driver status</div>
+        <div id="pill" class="pill" role="switch" aria-checked="false" tabindex="0" title="Toggle Online (O)">
+          <div class="dot"></div>
+        </div>
+        <div id="stateLabel" class="chip">Offline</div>
+      </div>
+      <div class="hdr-right">
+        <div class="chip">Today: <strong>R <span id="earnToday">0</span></strong></div>
+        <button id="simulate" class="primary" title="Simulate Request (R)">Simulate Request</button>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="main">
+      <!-- Map area -->
+      <section class="map" id="map">
+        <div class="grid-tilt"></div>
+        <div class="heat"></div>
+        <div class="controls">
+          <div class="ctrl" title="Recenter">🎯</div>
+          <div class="ctrl" title="Layers">🗺️</div>
+          <div class="ctrl" title="Zoom In">＋</div>
+          <div class="ctrl" title="Zoom Out">－</div>
+        </div>
+        <button id="goBtn" class="go off">Go Online</button>
+
+        <!-- Incoming request card -->
+        <div id="requestCard" class="request" aria-live="polite">
+          <div class="badge">🚘 <strong>New Trip</strong> • <span id="reqTimer">15</span>s</div>
+          <div class="req-row">
+            <div>
+              <div class="req-title">Pickup: 1.2 km • 3 min</div>
+              <div class="req-meta"><span>Rider: Kamo</span><span>Rating: 4.9★</span></div>
+            </div>
+            <div class="chip">Est. R <span id="reqFare">48</span></div>
+          </div>
+          <div class="req-row muted">To: Sandton City Mall • 6.4 km • 12–16 min</div>
+          <div class="req-actions">
+            <button id="decline" class="btn danger" title="Decline (D)">Decline</button>
+            <button id="accept" class="btn primary" title="Accept (A)">Accept</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right column -->
+      <aside class="panel">
+        <div class="row">
+          <h3>Today’s Earnings</h3>
+          <div class="chip">Cash out</div>
+        </div>
+        <div class="earn-num">R <span id="earnBig">0</span></div>
+        <div class="progress"><div id="bar" class="bar"></div></div>
+        <div class="row muted"><div>Goal: R 600</div><div id="goalPct">0%</div></div>
+
+        <h3>Recent</h3>
+        <div id="recent" class="list">
+          <div class="item"><span class="muted">No trips yet.</span><span>—</span></div>
+        </div>
+
+        <h3>Tips & Quests</h3>
+        <div class="list">
+          <div class="item"><span>🥇 Complete 5 trips</span><span class="muted">+R60</span></div>
+          <div class="item"><span>🔥 Peak hour boost</span><span class="muted">x1.2</span></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Trips drawer -->
+  <div id="drawer" class="drawer" aria-hidden="true">
+    <div class="row"><h3>Trip History (Today)</h3><button id="closeDrawer" class="primary">Close</button></div>
+    <div id="tripList"></div>
+  </div>
+
+<script>
+  // State
+  let online = false;
+  let earnings = 0;
+  let goal = 600;
+  let timerId = null;
+  let timerLeft = 0;
+  let reqVisible = false;
+  let tripSeq = 1;
+
+  const pill = document.getElementById('pill');
+  const stateLabel = document.getElementById('stateLabel');
+  const goBtn = document.getElementById('goBtn');
+  const earnToday = document.getElementById('earnToday');
+  const earnBig = document.getElementById('earnBig');
+  const bar = document.getElementById('bar');
+  const goalPct = document.getElementById('goalPct');
+  const simulate = document.getElementById('simulate');
+  const requestCard = document.getElementById('requestCard');
+  const reqTimer = document.getElementById('reqTimer');
+  const reqFare = document.getElementById('reqFare');
+  const recent = document.getElementById('recent');
+  const drawer = document.getElementById('drawer');
+  const tripList = document.getElementById('tripList');
+  const btnEarnings = document.getElementById('btnEarnings');
+  const btnTrips = document.getElementById('btnTrips');
+  const closeDrawer = document.getElementById('closeDrawer');
+
+  function setOnline(val){
+    online = val;
+    pill.classList.toggle('online', online);
+    pill.setAttribute('aria-checked', online);
+    stateLabel.textContent = online ? 'Online' : 'Offline';
+    goBtn.textContent = online ? 'You are Online' : 'Go Online';
+    goBtn.classList.toggle('off', !online);
+  }
+
+  function updateEarningsView(){
+    earnToday.textContent = earnings.toFixed(0);
+    earnBig.textContent = earnings.toFixed(0);
+    const pct = Math.min(100, (earnings/goal)*100);
+    bar.style.width = pct.toFixed(0) + '%';
+    goalPct.textContent = pct.toFixed(0) + '%';
+  }
+
+  function addRecent(text, amount){
+    // remove "no trips yet" item
+    if (recent.firstElementChild && recent.firstElementChild.textContent.includes('No trips')) {
+      recent.innerHTML = '';
+    }
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.innerHTML = `<span>${text}</span><span>R ${amount}</span>`;
+    recent.prepend(el);
+  }
+
+  function openRequest(){
+    if (!online) return;
+    reqVisible = true;
+    requestCard.classList.add('show');
+    timerLeft = 15;
+    reqTimer.textContent = timerLeft;
+    reqFare.textContent = (40 + Math.round(Math.random()*60)).toString();
+    timerId = setInterval(()=>{
+      timerLeft--; reqTimer.textContent = timerLeft;
+      if (timerLeft <= 0) { closeRequest(); addRecent('Missed request', '0'); }
+    },1000);
+  }
+  function closeRequest(){
+    reqVisible = false;
+    requestCard.classList.remove('show');
+    if (timerId) { clearInterval(timerId); timerId = null; }
+  }
+
+  function accept(){
+    if (!reqVisible) return;
+    closeRequest();
+    // simulate trip earnings and add to trips
+    const fare = Number(reqFare.textContent);
+    earnings += fare;
+    updateEarningsView();
+    addRecent('Trip completed • #'+(tripSeq++), fare);
+    addTripToDrawer(fare);
+  }
+  function decline(){
+    if (!reqVisible) return;
+    closeRequest();
+    addRecent('Declined request', '0');
+  }
+
+  function addTripToDrawer(amount){
+    const div = document.createElement('div');
+    div.className = 'trip';
+    const now = new Date().toLocaleTimeString();
+    div.innerHTML = `<div class="row"><strong>Trip #${tripSeq-1}</strong><span class="muted">${now}</span></div>
+                     <div class="row"><span>Distance ~ 6.4 km • 14 min</span><span><strong>R ${amount}</strong></span></div>`;
+    tripList.prepend(div);
+  }
+
+  // Hooks
+  pill.addEventListener('click', ()=> setOnline(!online));
+  pill.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); setOnline(!online);} });
+  goBtn.addEventListener('click', ()=> setOnline(!online));
+  simulate.addEventListener('click', openRequest);
+
+  document.getElementById('accept').addEventListener('click', accept);
+  document.getElementById('decline').addEventListener('click', decline);
+
+  btnTrips.addEventListener('click', (e)=>{ e.preventDefault(); drawer.classList.add('show'); drawer.setAttribute('aria-hidden','false'); });
+  closeDrawer.addEventListener('click', ()=>{ drawer.classList.remove('show'); drawer.setAttribute('aria-hidden','true'); });
+
+  btnEarnings.addEventListener('click', (e)=>{ e.preventDefault(); alert('Earnings details page would open here.'); });
+
+  // Keyboard shortcuts
+  window.addEventListener('keydown', (e)=>{
+    const k = e.key.toLowerCase();
+    if (k==='o') setOnline(!online);
+    if (k==='r') openRequest();
+    if (k==='a') accept();
+    if (k==='d') decline();
+    if (k==='e') btnEarnings.click();
+    if (k==='t') btnTrips.click();
+  });
+
+  // Init
+  setOnline(false);
+  updateEarningsView();
+</script>
+</body>
+</html>
