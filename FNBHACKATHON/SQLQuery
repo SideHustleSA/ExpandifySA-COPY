@@ -46,4 +46,59 @@ CREATE TABLE dbo.ServiceProvider
     User_ID         INT                   NOT NULL,                  -- FK → UserInformation
     Skills          VARCHAR(MAX)          NULL,                      -- comma-separated or JSON
     HasTransport    BIT                   NOT NULL DEFAULT 0,
-    HasEquipment    BIT                   NOT NULL DEFAU
+    HasEquipment    BIT                   NOT NULL DEFAULT 0,
+
+    CONSTRAINT FK_ServiceProvider_User
+        FOREIGN KEY (User_ID) REFERENCES dbo.UserInformation(User_ID)
+);
+GO
+
+/* Helpful index for the FK lookups */
+CREATE INDEX IX_ServiceProvider_User_ID ON dbo.ServiceProvider(User_ID);
+GO
+
+/* ===========================
+   3) Client
+   =========================== */
+IF OBJECT_ID('dbo.Client','U') IS NOT NULL
+    DROP TABLE dbo.Client;
+GO
+
+CREATE TABLE dbo.Client
+(
+    Client_ID               INT IDENTITY(2020,1) NOT NULL PRIMARY KEY,   -- starts at 2020
+    User_ID                 INT                   NOT NULL,               -- FK → UserInformation
+    AccountType             VARCHAR(MAX)          NULL,                   -- Individual/Business/Organization
+    [Organization name]     VARCHAR(MAX)          NULL,
+
+    CONSTRAINT FK_Client_User
+        FOREIGN KEY (User_ID) REFERENCES dbo.UserInformation(User_ID)
+);
+GO
+
+/* Helpful index for the FK lookups */
+CREATE INDEX IX_Client_User_ID ON dbo.Client(User_ID);
+GO
+
+/* ===========================
+   4) ForgotPassword
+   =========================== */
+IF OBJECT_ID('dbo.ForgotPassword','U') IS NOT NULL
+    DROP TABLE dbo.ForgotPassword;
+GO
+
+CREATE TABLE dbo.ForgotPassword
+(
+    question_ID INT IDENTITY(2030,1) NOT NULL PRIMARY KEY,          -- starts at 2030
+    User_ID     INT                   NOT NULL,                      -- FK → UserInformation
+    Question    VARCHAR(MAX)          NULL,
+    Answer      VARCHAR(MAX)          NULL,
+
+    CONSTRAINT FK_ForgotPassword_User
+        FOREIGN KEY (User_ID) REFERENCES dbo.UserInformation(User_ID)
+);
+GO
+
+/* Helpful index for the FK lookups */
+CREATE INDEX IX_ForgotPassword_User_ID ON dbo.ForgotPassword(User_ID);
+GO
